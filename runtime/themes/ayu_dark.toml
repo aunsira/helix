@@ -17,15 +17,15 @@
 "keyword.control" = "yellow"
 "keyword.directive" = "yellow"
 "operator" = "orange"
-"function" = "yellow"
+"function" = "ui-text"
 "tag" = "blue"
-"namespace" = "blue"
+"namespace" = "ui-text"
 "markup.heading" = "orange"
 "markup.list" = "yellow"
 "markup.bold" = { fg = "orange", modifiers = ["bold"] }
 "markup.italic" = { fg = "orange", modifiers = ["italic"] }
 "markup.strikethrough" = { modifiers = ["crossed_out"] }
-"markup.raw.block" = "orange"
+"markup.raw.block" = "ui-text"
 "markup.link.url" = "blue"
 "markup.link.text" = "yellow"
 "markup.link.label" = "green"
@@ -45,17 +45,17 @@
 "ui.statusline.normal" = { fg = "black", bg = "blue" }
 "ui.statusline.insert" = { fg = "black", bg = "orange" }
 "ui.statusline.select" = { fg = "black", bg = "magenta" }
-"ui.cursorline" = { bg = "black" }
+"ui.cursorline" = { bg = "#191f2b" }
 "ui.popup" = { fg = "#7B91b3", bg = "black" }
 "ui.window" = "dark_gray"
 "ui.help" = { fg = "#7B91b3", bg = "black" }
 "ui.text" = "foreground"
-"ui.text.focus" = { bg = "dark_gray", fg = "foreground" }
+"ui.text.focus" = { bg = "dark_gray" }
 "ui.text.info" = "foreground"
 "ui.virtual.whitespace" = "dark_gray"
 "ui.virtual.ruler" = { bg = "black" }
 "ui.virtual.inlay-hint" = { fg = "#e6b450", bg = "#302a20" }  # original bg #e6b45033
-"ui.menu" = { fg = "foreground", bg = "black" }
+"ui.menu" = { fg = "foreground", bg = "#2a3343" }
 "ui.menu.selected" = { bg = "gray", fg = "background" }
 "ui.selection" = { bg = "dark_gray" }
 "warning" = "yellow"
