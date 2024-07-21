@@ -17,15 +17,15 @@
 "keyword.control" = "yellow"
 "keyword.directive" = "yellow"
 "operator" = "orange"
-"function" = "yellow"
+"function" = "ui-text"
 "tag" = "blue"
-"namespace" = "blue"
+"namespace" = "ui-text"
 "markup.heading" = "orange"
 "markup.list" = "yellow"
 "markup.bold" = { fg = "orange", modifiers = ["bold"] }
 "markup.italic" = { fg = "orange", modifiers = ["italic"] }
 "markup.strikethrough" = { modifiers = ["crossed_out"] }
-"markup.raw.block" = "orange"
+"markup.raw.block" = "ui-text"
 "markup.link.url" = "blue"
 "markup.link.text" = "yellow"
 "markup.link.label" = "green"
