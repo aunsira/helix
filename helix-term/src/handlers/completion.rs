@@ -30,6 +30,7 @@ mod item;
 mod path;
 mod request;
 mod resolve;
+mod word;
 
 async fn handle_response(
     requests: &mut JoinSet<CompletionResponse>,
@@ -82,7 +83,7 @@ async fn replace_completions(
 fn show_completion(
     editor: &mut Editor,
     compositor: &mut Compositor,
-    items: Vec<CompletionItem>,
+    mut items: Vec<CompletionItem>,
     context: HashMap<CompletionProvider, ResponseContext>,
     trigger: Trigger,
 ) {
@@ -102,6 +103,9 @@ fn show_completion(
         return;
     }
     editor.handlers.completions.active_completions = context;
+
+    // TODO: not sure this is the right place to put this.
+    word::retain_valid_completions(trigger, doc, view, &mut items);
 
     let completion_area = ui.set_completion(editor, items, trigger.pos, size);
     let signature_help_area = compositor
