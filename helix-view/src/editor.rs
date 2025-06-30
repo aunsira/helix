@@ -510,6 +510,7 @@ pub struct StatusLineConfig {
     pub right: Vec<StatusLineElement>,
     pub separator: String,
     pub mode: ModeConfig,
+    pub render: StatusLineRenderConfig,
     pub diagnostics: Vec<Severity>,
     pub workspace_diagnostics: Vec<Severity>,
 }
@@ -536,6 +537,7 @@ impl Default for StatusLineConfig {
             ],
             separator: String::from("│"),
             mode: ModeConfig::default(),
+            render: StatusLineRenderConfig::PerView,
             diagnostics: vec![Severity::Warning, Severity::Error],
             workspace_diagnostics: vec![Severity::Warning, Severity::Error],
         }
@@ -558,6 +560,13 @@ impl Default for ModeConfig {
             select: String::from("SEL"),
         }
     }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum StatusLineRenderConfig {
+    Single,
+    PerView,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
