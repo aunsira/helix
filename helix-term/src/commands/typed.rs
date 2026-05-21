@@ -375,6 +375,35 @@ fn buffer_previous(
     Ok(())
 }
 
+fn buffer_open(
+    cx: &mut compositor::Context,
+    args: Args,
+    event: PromptEvent,
+) -> anyhow::Result<()> {
+    if event != PromptEvent::Validate {
+        return Ok(());
+    }
+
+    let arg = &args[0];
+    let arg_path = Path::new(arg);
+    let doc_id = cx.editor.documents().find_map(|doc| {
+        if doc.path() == Some(arg_path) || doc.relative_path() == Some(arg_path)
+        {
+            Some(doc.id())
+        } else {
+            None
+        }
+    });
+
+    match doc_id {
+        Some(doc_id) => {
+            cx.editor.switch(doc_id, Action::Replace);
+            Ok(())
+        }
+        None => bail!("no open buffer matches '{}'", arg),
+    }
+}
+
 fn write_impl(
     cx: &mut compositor::Context,
     path: Option<&str>,
@@ -2967,6 +2996,17 @@ pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
         completer: CommandCompleter::all(completers::filename),
         signature: Signature {
             positionals: (1, None),
+            ..Signature::DEFAULT
+        },
+    },
+    TypableCommand {
+        name: "buffer",
+        aliases: &["b"],
+        doc: "Switch to an open buffer by name.",
+        fun: buffer_open,
+        completer: CommandCompleter::positional(&[completers::buffer]),
+        signature: Signature {
+            positionals: (1, Some(1)),
             ..Signature::DEFAULT
         },
     },
