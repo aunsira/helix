@@ -1,0 +1,170 @@
+# Alacritty monochrome — no color highlighting, everything white/grayscale.
+# Derived from alacritty.toml. Structure is conveyed via modifiers
+# (bold/italic/underline) and shades of gray rather than color.
+
+# Syntax highlighting — all white (except comments, kept as in alacritty)
+"comment" = { fg = "cyan", modifiers = ["italic"] }
+
+"string" = "white"
+"string.regexp" = "white"
+"string.special" = "white"
+"string.special.symbol" = "white"
+"string.special.url" = { fg = "white", modifiers = ["underlined"] }
+
+"constant" = "white"
+"constant.builtin" = "white"
+"constant.character" = "white"
+"constant.character.escape" = "white"
+"constant.numeric" = "white"
+
+"variable" = "white"
+"variable.parameter" = "white"
+"variable.builtin" = "white"
+"variable.other.member" = "white"
+
+"label" = "white"
+
+"punctuation" = "white"
+"punctuation.delimiter" = "white"
+"punctuation.bracket" = "white"
+"punctuation.special" = "white"
+
+"keyword" = "white"
+"keyword.control" = "white"
+"keyword.control.import" = "white"
+"keyword.control.return" = "white"
+"keyword.control.conditional" = "white"
+"keyword.directive" = "white"
+"keyword.operator" = "white"
+"keyword.storage" = "white"
+"keyword.function" = "white"
+
+"operator" = "white"
+
+"function" = "white"
+"function.builtin" = "white"
+"function.method" = "white"
+"function.macro" = "white"
+"function.special" = "white"
+
+"tag" = "white"
+"tag.builtin" = "white"
+
+"type" = "white"
+"type.builtin" = "white"
+"type.enum.variant" = "white"
+
+"constructor" = "white"
+
+"namespace" = "white"
+
+"special" = "cyan"
+
+# Markup — differentiate with modifiers only
+"markup.heading" = { fg = "blue", modifiers = ["bold"] }
+"markup.heading.marker" = "gray"
+"markup.list" = "white"
+"markup.bold" = { modifiers = ["bold"] }
+"markup.italic" = { modifiers = ["italic"] }
+"markup.strikethrough" = { modifiers = ["crossed_out"] }
+"markup.link.url" = { fg = "white", modifiers = ["underlined"] }
+"markup.link.text" = "white"
+"markup.link.label" = "white"
+"markup.quote" = "gray"
+"markup.raw" = "gray"
+"markup.raw.inline" = { fg = "white", modifiers = ["italic"] }
+"markup.raw.block" = "white"
+
+# Diff — kept as in alacritty
+"diff.plus" = "green"
+"diff.minus" = "red"
+"diff.delta" = "yellow"
+
+# Interface
+"ui.background" = { bg = "background" }
+"ui.background.separator" = { fg = "gray" }
+
+"ui.text" = "foreground"
+"ui.text.focus" = { fg = "bright_white", bg = "dim_black" }
+"ui.text.inactive" = { fg = "gray" }
+"ui.text.info" = "foreground"
+
+"ui.cursor" = { fg = "background", bg = "white" }
+"ui.cursor.primary" = { fg = "background", bg = "white" }
+"ui.cursor.match" = { fg = "bright_white", modifiers = ["underlined"] }
+"ui.cursor.primary.insert" = { fg = "background", bg = "light-blue" }
+# Selection — kept as in alacritty
+"ui.cursor.select" = { fg = "bright_white", bg = "light-blue" }
+"ui.cursor.primary.select" = { fg = "bright_white", bg = "white" }
+
+"ui.selection" = { fg = "bright_white", bg = "light-blue" }
+"ui.selection.primary" = { fg = "bright_white", bg = "light-blue" }
+
+"ui.linenr" = { fg = "gray" }
+"ui.linenr.selected" = { fg = "bright_white" }
+
+"ui.cursorline.primary" = { bg = "dim_black" }
+"ui.cursorline" = { bg = "#191f2b" }
+"ui.cursorcolumn.primary" = { bg = "dim_black" }
+
+"ui.statusline" = { fg = "foreground", bg = "dim_black" }
+"ui.statusline.inactive" = { fg = "gray", bg = "dim_black" }
+"ui.statusline.normal" = { fg = "background", bg = "foreground", modifiers = ["bold"] }
+"ui.statusline.insert" = { fg = "background", bg = "bright_white", modifiers = ["bold"] }
+"ui.statusline.select" = { fg = "background", bg = "magenta", modifiers = ["bold"] }
+
+"ui.bufferline" = { fg = "gray", bg = "dim_black" }
+"ui.bufferline.active" = { fg = "foreground", bg = "background" }
+
+"ui.popup" = { fg = "foreground", bg = "dim_black" }
+"ui.popup.info" = { fg = "foreground", bg = "dim_black" }
+"ui.window" = { fg = "gray" }
+"ui.help" = { fg = "foreground", bg = "dim_black" }
+
+"ui.menu" = { fg = "foreground", bg = "#2a3343" }
+"ui.menu.selected" = { fg = "white", bg = "light-blue" }
+"ui.menu.scroll" = { fg = "gray", bg = "background" }
+
+"ui.virtual.whitespace" = { fg = "gray" }
+"ui.virtual.ruler" = { bg = "dim_black" }
+"ui.virtual.indent-guide" = { fg = "gray" }
+"ui.virtual.inlay-hint" = { fg = "gray", bg = "dim_black" }
+"ui.virtual.jump-label" = { fg = "red", modifiers = ["italic", "bold"] }
+
+"ui.highlight" = { fg = "bright_white", bg = "light-blue" }
+
+"warning" = "gray"
+"error" = "bright_white"
+"info" = { fg = "white", modifiers = ["italic"] }
+"hint" = "gray"
+
+"diagnostic.warning" = { underline = { color = "gray", style = "curl" } }
+"diagnostic.error" = { underline = { color = "bright_white", style = "curl" } }
+"diagnostic.info" = { underline = { color = "gray", style = "curl" } }
+"diagnostic.hint" = { underline = { color = "gray", style = "curl" } }
+"diagnostic.unnecessary" = { modifiers = ["dim"] }
+"diagnostic.deprecated" = { modifiers = ["crossed_out"] }
+
+[palette]
+# Primary
+background = "#0f1419"
+foreground = "#c5c8c6"
+
+# Grayscale ramp — used for everything except the exceptions below
+black = "#1d1f21"
+gray = "#666666"
+white = "#c5c8c6"
+bright_white = "#eaeaea"
+
+# Kept from alacritty for comments, diff, and selection
+red = "#cc6666"
+green = "#b5bd68"
+yellow = "#f0c674"
+blue = "#81a2be"
+magenta = "#b294bb"
+cyan = "#8abeb7"
+
+# Surfaces
+dim_black = "#131721"        # subtle surface for statusline / popups / cursorline
+selection = "#2d3640"        # subtle surface
+selection_blue = "#5578a8"   # visual selection background

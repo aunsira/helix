@@ -41,7 +41,7 @@ use std::{
 
 use crate::ui::{Prompt, PromptEvent};
 use helix_core::{
-    char_idx_at_visual_offset, fuzzy::MATCHER, movement::Direction,
+    char_idx_at_visual_offset, fuzzy::MATCHER, movement::Direction, syntax::OverlayHighlights,
     text_annotations::TextAnnotations, unicode::segmentation::UnicodeSegmentation, Position,
 };
 use helix_view::{
@@ -988,6 +988,24 @@ impl<T: 'static + Send + Sync, D: 'static + Send + Sync> Picker<T, D> {
             let mut decorations = DecorationManager::default();
 
             if let Some((start, end)) = range {
+                // Overlay the matched range so the highlight's foreground (e.g. a
+                // selection text color) overrides the syntax colors, matching how
+                // selections are rendered in the editor. The decoration below only
+                // paints the background across the full line width.
+                if let Some(highlight) = cx
+                    .editor
+                    .theme
+                    .find_highlight_exact("ui.highlight")
+                    .or_else(|| cx.editor.theme.find_highlight_exact("ui.selection"))
+                {
+                    let text = doc.text();
+                    let last_line = text.len_lines();
+                    let start_char = text.line_to_char(start.min(last_line));
+                    let end_char = text.line_to_char((end + 1).min(last_line));
+                    overlay_highlights
+                        .push(OverlayHighlights::single(highlight, start_char..end_char));
+                }
+
                 let style = cx
                     .editor
                     .theme

@@ -1,0 +1,175 @@
+# Alacritty default colors (v0.12.3) — "Tomorrow Night Bright" palette
+# Ported from https://github.com/alacritty/alacritty/blob/v0.12.3/alacritty/src/config/color.rs
+
+# Syntax highlighting
+"comment" = { fg = "cyan", modifiers = ["italic"] }
+
+"string" = "magenta"
+"string.regexp" = "cyan"
+"string.special" = "cyan"
+"string.special.symbol" = "white"
+"string.special.url" = { fg = "blue", modifiers = ["underlined"] }
+
+"constant" = "white"
+"constant.builtin" = "red"
+"constant.character" = "red"
+"constant.character.escape" = "cyan"
+"constant.numeric" = "red"
+
+"variable" = "foreground"
+"variable.parameter" = "foreground"
+"variable.builtin" = "red"
+"variable.other.member" = "foreground"
+
+"label" = "cyan"
+
+"punctuation" = "foreground"
+"punctuation.delimiter" = "foreground"
+"punctuation.bracket" = "foreground"
+"punctuation.special" = "cyan"
+
+"keyword" = "blue"
+"keyword.control" = "magenta"
+"keyword.control.import" = "magenta"
+"keyword.control.return" = "blue"
+"keyword.control.conditional" = "blue"
+"keyword.directive" = "cyan"
+"keyword.operator" = "blue"
+"keyword.storage" = "magenta"
+"keyword.function" = "blue"
+
+"operator" = "foreground"
+
+# "function" = "blue"
+"function" = "ui-text"
+"function.builtin" = "white"
+"function.method" = "white"
+"function.macro" = "cyan"
+"function.special" = "cyan"
+
+"tag" = "yellow"
+"tag.builtin" = "yellow"
+
+"type" = "yellow"
+"type.builtin" = "yellow"
+"type.enum.variant" = "red"
+
+"constructor" = "yellow"
+
+# "namespace" = "yellow"
+"namespace" = "ui-text"
+
+"special" = "cyan"
+
+# Markup
+"markup.heading" = { fg = "blue", modifiers = ["bold"] }
+"markup.heading.marker" = "bright_black"
+"markup.list" = "red"
+"markup.bold" = { modifiers = ["bold"] }
+"markup.italic" = { modifiers = ["italic"] }
+"markup.strikethrough" = { modifiers = ["crossed_out"] }
+"markup.link.url" = { fg = "blue", modifiers = ["underlined"] }
+"markup.link.text" = "red"
+"markup.link.label" = "cyan"
+"markup.quote" = "green"
+"markup.raw" = "green"
+"markup.raw.block" = "ui-text"
+
+"diff.plus" = "green"
+"diff.minus" = "red"
+"diff.delta" = "yellow"
+
+# Interface
+"ui.background" = { bg = "background" }
+"ui.background.separator" = { fg = "bright_black" }
+
+"ui.text" = "foreground"
+"ui.text.focus" = { fg = "bright_white", bg = "dim_black" }
+"ui.text.inactive" = { fg = "bright_black" }
+"ui.text.info" = "foreground"
+
+"ui.cursor" = { fg = "background", bg = "white" }
+"ui.cursor.primary" = { fg = "background", bg = "white" }
+"ui.cursor.match" = { fg = "yellow", modifiers = ["underlined"] }
+"ui.cursor.primary.insert" = { fg = "background", bg = "light-blue" }
+"ui.cursor.select" = { fg = "bright_white", bg = "light-blue" }
+"ui.cursor.primary.select" = { fg = "bright_white", bg = "white" }
+
+"ui.selection" = { fg = "bright_white", bg = "light-blue" }
+"ui.selection.primary" = { fg = "bright_white", bg = "light-blue" }
+
+"ui.linenr" = { fg = "bright_black" }
+"ui.linenr.selected" = { fg = "bright_white" }
+
+"ui.cursorline.primary" = { bg = "dim_black" }
+"ui.cursorline" = { bg = "#191f2b" }
+"ui.cursorcolumn.primary" = { bg = "dim_black" }
+
+"ui.statusline" = { fg = "foreground", bg = "dim_black" }
+"ui.statusline.inactive" = { fg = "bright_black", bg = "dim_black" }
+"ui.statusline.normal" = { fg = "background", bg = "light-blue", modifiers = ["bold"] }
+"ui.statusline.insert" = { fg = "background", bg = "green", modifiers = ["bold"] }
+"ui.statusline.select" = { fg = "background", bg = "magenta", modifiers = ["bold"] }
+
+"ui.bufferline" = { fg = "bright_black", bg = "dim_black" }
+"ui.bufferline.active" = { fg = "foreground", bg = "background" }
+
+"ui.popup" = { fg = "foreground", bg = "dim_black" }
+"ui.popup.info" = { fg = "foreground", bg = "dim_black" }
+"ui.window" = { fg = "bright_black" }
+"ui.help" = { fg = "foreground", bg = "dim_black" }
+
+"ui.menu" = { fg = "foreground", bg = "dim_black" }
+"ui.menu.selected" = { fg = "white", bg = "light-blue" }
+"ui.menu.scroll" = { fg = "gray" }
+
+"ui.virtual.whitespace" = { fg = "bright_black" }
+"ui.virtual.ruler" = { bg = "dim_black" }
+"ui.virtual.indent-guide" = { fg = "bright_black" }
+"ui.virtual.inlay-hint" = { fg = "bright_black", bg = "dim_black" }
+"ui.virtual.jump-label" = { fg = "red", modifiers = ["italic", "bold"] }
+
+"ui.highlight" = { fg = "bright_white", bg = "light-blue" }
+
+"warning" = "yellow"
+"error" = "red"
+"info" = "blue"
+"hint" = "cyan"
+
+"diagnostic.warning" = { underline = { color = "yellow", style = "curl" } }
+"diagnostic.error" = { underline = { color = "red", style = "curl" } }
+"diagnostic.info" = { underline = { color = "blue", style = "curl" } }
+"diagnostic.hint" = { underline = { color = "cyan", style = "curl" } }
+"diagnostic.unnecessary" = { modifiers = ["dim"] }
+"diagnostic.deprecated" = { modifiers = ["crossed_out"] }
+
+[palette]
+# Primary
+background = "#0f1419"   # derived from ayu_dark
+foreground = "#c5c8c6"
+
+# Normal
+black = "#1d1f21"
+red = "#cc6666"
+green = "#b5bd68"
+yellow = "#f0c674"
+blue = "#81a2be"
+magenta = "#b294bb"
+cyan = "#8abeb7"
+white = "#c5c8c6"
+
+# Bright
+bright_black = "#666666"
+bright_red = "#d54e53"
+bright_green = "#b9ca4a"
+bright_yellow = "#e7c547"
+bright_blue = "#7aa6da"
+bright_magenta = "#c397d8"
+bright_cyan = "#70c0b1"
+bright_white = "#eaeaea"
+
+# Derived helpers (not part of the 16-color palette)
+orange = "#de935f"      # numeric literals (Tomorrow Night accent)
+dim_black = "#131721"   # subtle surface for statusline / popups / cursorline (ayu_dark)
+selection = "#2d3640"   # subtle surface (ayu_dark)
+selection_blue = "#5578a8"   # visual selection background (Kakoune-style blue)
