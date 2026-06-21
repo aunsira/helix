@@ -1,4 +1,4 @@
-use std::{borrow::Cow, sync::Arc};
+use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use helix_core::{
     self as core, chars::char_is_word, completion::CompletionProvider, movement, Transaction,
@@ -6,11 +6,12 @@ use helix_core::{
 use helix_event::TaskHandle;
 use helix_stdx::rope::RopeSliceExt as _;
 use helix_view::{
-    document::SavePoint, handlers::completion::ResponseContext, Document, Editor, ViewId,
+    document::SavePoint, handlers::completion::ResponseContext, Document, DocumentId, Editor, ViewId,
 };
 
 use super::{request::TriggerKind, CompletionItem, CompletionItems, CompletionResponse, Trigger};
 
+/// Fallback shown when a word's source buffer has no display name.
 const COMPLETION_KIND: &str = "word";
 
 pub(super) fn completion(
@@ -37,6 +38,7 @@ pub(super) fn completion(
     let text = doc.text().slice(..);
     let selection = doc.selection(view.id).clone();
     let pos = selection.primary().cursor(text);
+    let current_doc = doc.id();
 
     let cursor = movement::move_prev_word_start(text, core::Range::point(pos), 1);
     if cursor.head == pos {
@@ -69,22 +71,38 @@ pub(super) fn completion(
         return None;
     }
 
+    // A snapshot of file names for every open document, so the worker thread can label each word
+    // with the buffer it came from without needing access to the `Editor`. Only the file name is
+    // kept (not the full path) to keep the completion menu narrow. Built only once we're past the
+    // early-return gates above, so bailed-out triggers don't pay for it.
+    let doc_names: HashMap<DocumentId, String> = editor
+        .documents()
+        .map(|doc| {
+            let name = doc
+                .path()
+                .and_then(|path| path.file_name())
+                .map(|name| name.to_string_lossy().into_owned())
+                .unwrap_or_else(|| doc.display_name().into_owned());
+            (doc.id(), name)
+        })
+        .collect();
+
     let future = move || {
         let text = rope.slice(..);
         let typed_word: Cow<_> = text.slice(typed_word_range).into();
         let items = word_index
             .matches(&typed_word)
             .into_iter()
-            .filter(|word| word.as_str() != typed_word.as_ref())
-            .map(|word| {
+            .filter(|m| m.word != typed_word.as_ref())
+            .map(|m| {
                 let transaction = Transaction::change_by_selection(&rope, &selection, |range| {
                     let cursor = range.cursor(text);
-                    (cursor - edit_diff, cursor, Some((&word).into()))
+                    (cursor - edit_diff, cursor, Some((m.word.as_str()).into()))
                 });
                 CompletionItem::Other(core::CompletionItem {
                     transaction,
-                    label: word.into(),
-                    kind: Cow::Borrowed(COMPLETION_KIND),
+                    label: m.word.into(),
+                    kind: source_label(&m.sources, current_doc, &doc_names),
                     documentation: None,
                     provider: CompletionProvider::Word,
                 })
@@ -103,6 +121,31 @@ pub(super) fn completion(
     };
 
     Some(future)
+}
+
+/// Builds the `kind` column shown next to a word completion: the source buffer of the word.
+///
+/// When the word lives in the current buffer that name is shown, otherwise an arbitrary source
+/// buffer is chosen. Words present in several buffers are not distinguished.
+fn source_label(
+    sources: &[DocumentId],
+    current_doc: DocumentId,
+    doc_names: &HashMap<DocumentId, String>,
+) -> Cow<'static, str> {
+    // Prefer the current buffer so the most relevant source is shown first.
+    let primary = sources
+        .iter()
+        .find(|&&doc| doc == current_doc)
+        .or_else(|| sources.first());
+
+    let Some(&primary) = primary else {
+        return Cow::Borrowed(COMPLETION_KIND);
+    };
+
+    match doc_names.get(&primary) {
+        Some(name) => Cow::Owned(name.clone()),
+        None => Cow::Borrowed(COMPLETION_KIND),
+    }
 }
 
 pub(super) fn retain_valid_completions(

@@ -36,7 +36,7 @@ struct Change {
 
 #[derive(Debug)]
 enum Event {
-    Insert(Rope),
+    Insert(DocumentId, Rope),
     Update(DocumentId, Change),
     Delete(DocumentId, Rope),
     /// Clear the entire word index.
@@ -104,7 +104,7 @@ impl AsyncHook for Hook {
 
     fn handle_event(&mut self, event: Self::Event, timeout: Option<Instant>) -> Option<Instant> {
         match event {
-            Event::Insert(_) => unreachable!("inserts are sent to the worker directly"),
+            Event::Insert(..) => unreachable!("inserts are sent to the worker directly"),
             Event::Update(doc, change) => {
                 if let Some(pending_change) = self.changes.get_mut(&doc) {
                     // There is already a change waiting for this document. Coalesce: keep the
@@ -174,9 +174,12 @@ struct WordIndexInner {
     /// Reference counted storage for words.
     ///
     /// Words are very likely to be reused many times. Instead of storing duplicates we keep a
-    /// reference count of times a word is used. When the reference count drops to zero the word
-    /// is removed from the index.
-    words: HashMap<Word, u32>,
+    /// reference count of times a word is used per source document. When a word's reference
+    /// count for a document drops to zero the document is forgotten as a source, and when no
+    /// documents reference a word the word is removed from the index.
+    ///
+    /// The set of source documents is used to show which buffer(s) a completion came from.
+    words: HashMap<Word, HashMap<DocumentId, u32>>,
 }
 
 impl WordIndexInner {
@@ -184,27 +187,43 @@ impl WordIndexInner {
         self.words.keys()
     }
 
-    fn insert(&mut self, word: RopeSlice) {
+    /// The set of documents which contain `word`, if it is present in the index.
+    fn sources(&self, word: &str) -> Option<&HashMap<DocumentId, u32>> {
+        self.words.get(word)
+    }
+
+    fn insert(&mut self, doc: DocumentId, word: RopeSlice) {
         let word: Cow<str> = word.into();
-        if let Some(rc) = self.words.get_mut(word.as_ref()) {
-            *rc = rc.saturating_add(1);
+        if let Some(sources) = self.words.get_mut(word.as_ref()) {
+            sources
+                .entry(doc)
+                .and_modify(|rc| *rc = rc.saturating_add(1))
+                .or_insert(1);
         } else {
             let word = match word {
                 Cow::Owned(s) => Word::from_string(s),
                 Cow::Borrowed(s) => Word::from_ref(s),
             };
-            self.words.insert(word, 1);
+            let mut sources = HashMap::default();
+            sources.insert(doc, 1);
+            self.words.insert(word, sources);
         }
     }
 
-    fn remove(&mut self, word: RopeSlice) {
+    fn remove(&mut self, doc: DocumentId, word: RopeSlice) {
         let word: Cow<str> = word.into();
-        match self.words.get_mut(word.as_ref()) {
+        let Some(sources) = self.words.get_mut(word.as_ref()) else {
+            return;
+        };
+        match sources.get_mut(&doc) {
             Some(1) => {
-                self.words.remove(word.as_ref());
+                sources.remove(&doc);
             }
             Some(n) => *n -= 1,
             None => (),
+        }
+        if sources.is_empty() {
+            self.words.remove(word.as_ref());
         }
     }
 
@@ -218,29 +237,44 @@ pub struct WordIndex {
     inner: Arc<RwLock<WordIndexInner>>,
 }
 
+/// A fuzzy match for a word in the index, along with the documents it was found in.
+#[derive(Debug)]
+pub struct WordMatch {
+    pub word: String,
+    /// The documents which contain this word.
+    pub sources: Vec<DocumentId>,
+}
+
 impl WordIndex {
-    pub fn matches(&self, pattern: &str) -> Vec<String> {
+    pub fn matches(&self, pattern: &str) -> Vec<WordMatch> {
         let inner = self.inner.read();
         let mut matches = fuzzy_match(pattern, inner.words(), false);
         matches.sort_unstable_by_key(|(_, score)| *score);
         matches
             .into_iter()
-            .map(|(word, _)| word.to_string())
+            .map(|(word, _)| WordMatch {
+                sources: inner
+                    .sources(word)
+                    .map(|sources| sources.keys().copied().collect())
+                    .unwrap_or_default(),
+                word: word.to_string(),
+            })
             .collect()
     }
 
-    fn add_document(&self, text: &Rope, cancel: &TaskHandle) {
+    fn add_document(&self, doc: DocumentId, text: &Rope, cancel: &TaskHandle) {
         let mut inner = self.inner.write();
         for (i, word) in words(text.slice(..)).enumerate() {
             if i % CANCEL_CHECK_INTERVAL == 0 && cancel.is_canceled() {
                 return;
             }
-            inner.insert(word);
+            inner.insert(doc, word);
         }
     }
 
     fn update_document(
         &self,
+        doc: DocumentId,
         old_text: &Rope,
         text: &Rope,
         changes: &ChangeSet,
@@ -253,11 +287,11 @@ impl WordIndex {
         for (old_window, new_window) in changed_windows(old_text.slice(..), text.slice(..), changes)
         {
             for word in words(new_window) {
-                inner.insert(word);
+                inner.insert(doc, word);
                 since_check += 1;
             }
             for word in words(old_window) {
-                inner.remove(word);
+                inner.remove(doc, word);
                 since_check += 1;
             }
             if since_check >= CANCEL_CHECK_INTERVAL {
@@ -269,13 +303,13 @@ impl WordIndex {
         }
     }
 
-    fn remove_document(&self, text: &Rope, cancel: &TaskHandle) {
+    fn remove_document(&self, doc: DocumentId, text: &Rope, cancel: &TaskHandle) {
         let mut inner = self.inner.write();
         for (i, word) in words(text.slice(..)).enumerate() {
             if i % CANCEL_CHECK_INTERVAL == 0 && cancel.is_canceled() {
                 return;
             }
-            inner.remove(word);
+            inner.remove(doc, word);
         }
     }
 
@@ -297,11 +331,11 @@ impl WordIndex {
             let this = self.clone();
             let cancel = cancel.clone();
             tokio::task::spawn_blocking(move || match event {
-                Event::Insert(text) => {
-                    this.add_document(&text, &cancel);
+                Event::Insert(doc, text) => {
+                    this.add_document(doc, &text, &cancel);
                 }
                 Event::Update(
-                    _doc,
+                    doc,
                     Change {
                         old_text,
                         text,
@@ -309,10 +343,10 @@ impl WordIndex {
                         ..
                     },
                 ) => {
-                    this.update_document(&old_text, &text, &changes, &cancel);
+                    this.update_document(doc, &old_text, &text, &changes, &cancel);
                 }
-                Event::Delete(_doc, text) => {
-                    this.remove_document(&text, &cancel);
+                Event::Delete(doc, text) => {
+                    this.remove_document(doc, &text, &cancel);
                 }
                 Event::Clear => {
                     this.clear();
@@ -452,7 +486,7 @@ pub(crate) fn register_hooks(handlers: &Handlers) {
     register_hook!(move |event: &mut DocumentDidOpen<'_>| {
         let doc = doc!(event.editor, &event.doc);
         if doc.word_completion_enabled() {
-            send(&coordinator, Event::Insert(doc.text().clone()));
+            send(&coordinator, Event::Insert(doc.id(), doc.text().clone()));
         }
         Ok(())
     });
@@ -498,7 +532,7 @@ pub(crate) fn register_hooks(handlers: &Handlers) {
         if !event.old.word_completion.enable && event.new.word_completion.enable {
             for doc in event.editor.documents() {
                 if doc.word_completion_enabled() {
-                    send(&coordinator, Event::Insert(doc.text().clone()));
+                    send(&coordinator, Event::Insert(doc.id(), doc.text().clone()));
                 }
             }
         }
@@ -516,7 +550,7 @@ pub mod bench {
 
     pub fn add_document(index: &WordIndex, text: &Rope) {
         let mut cancel = helix_event::TaskController::new();
-        index.add_document(text, &cancel.restart());
+        index.add_document(super::DocumentId::default(), text, &cancel.restart());
     }
 
     pub fn words(text: RopeSlice) -> impl Iterator<Item = RopeSlice> {
@@ -545,7 +579,7 @@ mod tests {
             inner
                 .words
                 .iter()
-                .map(|(w, c)| (w.to_string(), *c))
+                .map(|(w, sources)| (w.to_string(), sources.values().sum()))
                 .collect()
         }
     }
@@ -555,7 +589,7 @@ mod tests {
         let text = Rope::from_str(text);
         let index = WordIndex::default();
         let mut cancel = TaskController::new();
-        index.add_document(&text, &cancel.restart());
+        index.add_document(DocumentId::default(), &text, &cancel.restart());
         let actual = index.words();
         let expected: HashSet<_> = expected.into_iter().map(|i| i.to_string()).collect();
         assert_eq!(expected, actual);
@@ -582,12 +616,13 @@ mod tests {
         let expect_inserted: HashSet<_> =
             expect_inserted.into_iter().map(|i| i.to_string()).collect();
 
+        let doc = DocumentId::default();
         let index = WordIndex::default();
         let mut cancel = TaskController::new();
         let handle = cancel.restart();
-        index.add_document(&before, &handle);
+        index.add_document(doc, &before, &handle);
         let words_before = index.words();
-        index.update_document(&before, &after, diff.changes(), &handle);
+        index.update_document(doc, &before, &after, diff.changes(), &handle);
         let words_after = index.words();
 
         let actual_removed = words_before.difference(&words_after).cloned().collect();
@@ -667,12 +702,13 @@ mod tests {
         // refcounts) matching a fresh index built from scratch.
         let mut cancel = TaskController::new();
         let handle = cancel.restart();
+        let doc = DocumentId::default();
         let index = WordIndex::default();
-        index.add_document(&change.old_text, &handle);
-        index.update_document(&change.old_text, &change.text, &change.changes, &handle);
+        index.add_document(doc, &change.old_text, &handle);
+        index.update_document(doc, &change.old_text, &change.text, &change.changes, &handle);
 
         let fresh = WordIndex::default();
-        fresh.add_document(&change.text, &handle);
+        fresh.add_document(doc, &change.text, &handle);
 
         assert_eq!(index.counts(), fresh.counts());
     }
@@ -936,12 +972,13 @@ mod tests {
 
             let mut cancel = TaskController::new();
             let handle = cancel.restart();
+            let doc = DocumentId::default();
             let incremental = WordIndex::default();
-            incremental.add_document(&old, &handle);
-            incremental.update_document(&old, &new, &changes, &handle);
+            incremental.add_document(doc, &old, &handle);
+            incremental.update_document(doc, &old, &new, &changes, &handle);
 
             let fresh = WordIndex::default();
-            fresh.add_document(&new, &handle);
+            fresh.add_document(doc, &new, &handle);
 
             incremental.counts() == fresh.counts()
         }
@@ -961,12 +998,19 @@ mod tests {
 
             let mut cancel = TaskController::new();
             let handle = cancel.restart();
+            let doc = DocumentId::default();
             let incremental = WordIndex::default();
-            incremental.add_document(&change.old_text, &handle);
-            incremental.update_document(&change.old_text, &change.text, &change.changes, &handle);
+            incremental.add_document(doc, &change.old_text, &handle);
+            incremental.update_document(
+                doc,
+                &change.old_text,
+                &change.text,
+                &change.changes,
+                &handle,
+            );
 
             let fresh = WordIndex::default();
-            fresh.add_document(&change.text, &handle);
+            fresh.add_document(doc, &change.text, &handle);
 
             incremental.counts() == fresh.counts()
         }

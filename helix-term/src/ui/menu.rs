@@ -140,18 +140,26 @@ impl<T: Item> Menu<T> {
             .first()
             .map(|option| option.format(&self.editor_data).cells.len())
             .unwrap_or_default();
-        let max_lens = self.options.iter().fold(vec![0; n], |mut acc, option| {
-            let row = option.format(&self.editor_data);
-            // maintain max for each column
-            for (acc, cell) in acc.iter_mut().zip(row.cells.iter()) {
-                let width = cell.content.width();
-                if width > *acc {
-                    *acc = width;
+        // Size each column to the widest *matching* row, not every loaded option. Otherwise a long
+        // candidate that has been filtered out (and isn't displayed) would still pad the columns,
+        // leaving dangling whitespace after shorter entries. This narrows automatically as the
+        // match set shrinks while typing.
+        let max_lens = self
+            .matches
+            .iter()
+            .fold(vec![0; n], |mut acc, (index, _score)| {
+                let option = &self.options[*index as usize];
+                let row = option.format(&self.editor_data);
+                // maintain max for each column
+                for (acc, cell) in acc.iter_mut().zip(row.cells.iter()) {
+                    let width = cell.content.width();
+                    if width > *acc {
+                        *acc = width;
+                    }
                 }
-            }
 
-            acc
-        });
+                acc
+            });
 
         let height = self.matches.len().min(10).min(viewport.1 as usize);
         // do all the matches fit on a single screen?

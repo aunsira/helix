@@ -112,6 +112,25 @@ impl menu::Item for CompletionItem {
             },
         );
 
+        // Word completions carry the source buffer name in `kind`. Keep it in its own column so the
+        // file names line up across all candidates, but render it dimmed so the word stays dominant.
+        let kind = if matches!(
+            self,
+            CompletionItem::Other(core::CompletionItem {
+                provider: helix_core::completion::CompletionProvider::Word,
+                ..
+            })
+        ) {
+            Spans::from(
+                kind.0
+                    .into_iter()
+                    .map(|span| Span::styled(span.content, span.style.add_modifier(Modifier::DIM)))
+                    .collect::<Vec<_>>(),
+            )
+        } else {
+            kind
+        };
+
         menu::Row::new([menu::Cell::from(label), menu::Cell::from(kind)])
     }
 }
