@@ -5,16 +5,16 @@
   .
   [
     (method
-      name: (_) @name) @definition.method
+      name: (_) @name) @definition.function
     (singleton_method
-      name: (_) @name) @definition.method
+      name: (_) @name) @definition.function
   ]
   (#strip! @doc "^#\\s*")
-  (#select-adjacent! @doc @definition.method)
+  (#select-adjacent! @doc @definition.function)
 )
 
 (alias
-  name: (_) @name) @definition.method
+  name: (_) @name) @definition.function
 
 (setter
   (identifier) @_ignore)
