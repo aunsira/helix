@@ -1,6 +1,27 @@
 use super::*;
 
 #[tokio::test(flavor = "multi_thread")]
+async fn insert_newline_continue_comment_in_injected_comment_layer() -> anyhow::Result<()> {
+    // The comment marker sits inside an injected `comment` layer (which has no comment
+    // tokens). Continuation must fall back to the host language's tokens. Ruby's `#`
+    // comment is fully covered by such an injection, so it regressed before the fallback.
+    test((
+        indoc! {"\
+            # Hello world!#[|
+            ]#
+            "},
+        ":lang ruby<ret>i<ret>",
+        indoc! {"\
+            # Hello world!
+            # #[|
+            ]#
+            "},
+    ))
+    .await?;
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn change_line_above_comment() -> anyhow::Result<()> {
     // <https://github.com/helix-editor/helix/issues/12570>
     test((

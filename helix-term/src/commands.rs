@@ -3862,6 +3862,10 @@ fn open(cx: &mut Context, open: Open, comment_continuation: CommentContinuation)
                     .map(|c| text.char_to_byte(text.line_to_char(curr_line_num) + c))
                     .and_then(|byte| doc.language_config_at(&loader, byte))
                     .and_then(|config| config.comment_tokens.as_ref())
+                    .or_else(|| {
+                        doc.language_config()
+                            .and_then(|config| config.comment_tokens.as_ref())
+                    })
                     .and_then(|tokens| comment::get_comment_token(text, tokens, curr_line_num))
             } else {
                 None
@@ -4491,6 +4495,10 @@ pub mod insert {
                     .map(|c| text.char_to_byte(line_start + c))
                     .and_then(|byte| doc.language_config_at(&loader, byte))
                     .and_then(|config| config.comment_tokens.as_ref())
+                    .or_else(|| {
+                        doc.language_config()
+                            .and_then(|config| config.comment_tokens.as_ref())
+                    })
                     .and_then(|tokens| comment::get_comment_token(text, tokens, current_line))
             } else {
                 None
