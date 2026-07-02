@@ -2,6 +2,7 @@ use crate::{
     commands::{self, OnKeyCallback, OnKeyCallbackKind},
     compositor::{Component, Context, Event, EventResult},
     events::{OnModeSwitch, PostCommand},
+    ctrl,
     handlers::completion::CompletionItem,
     key,
     keymap::{KeymapResult, Keymaps},
@@ -1516,6 +1517,25 @@ impl Component for EditorView {
 
                 if !self.on_next_key(OnKeyCallbackKind::PseudoPending, &mut cx, key) {
                     match mode {
+                        // C-c accepts the active completion (like Enter), closes the
+                        // menu, and returns to normal mode. When no menu is open it
+                        // simply switches to normal mode.
+                        Mode::Insert if key == ctrl!('c') => {
+                            if self.completion.is_some() {
+                                if let Some(completion) = &mut self.completion {
+                                    let mut cx = Context {
+                                        editor: cx.editor,
+                                        jobs: cx.jobs,
+                                        scroll: None,
+                                    };
+                                    // validate the current selection, as Enter would
+                                    let _ = completion
+                                        .handle_event(&Event::Key(key!(Enter)), &mut cx);
+                                }
+                                self.clear_completion(cx.editor);
+                            }
+                            cx.editor.enter_normal_mode();
+                        }
                         Mode::Insert => {
                             // let completion swallow the event if necessary
                             let mut consumed = false;
