@@ -1536,6 +1536,24 @@ impl Component for EditorView {
                             }
                             cx.editor.enter_normal_mode();
                         }
+                        // With the completion menu open, Enter accepts the highlighted
+                        // item (if any), closes the menu, and then inserts a newline.
+                        Mode::Insert if key == key!(Enter) && self.completion.is_some() => {
+                            if let Some(completion) = &mut self.completion {
+                                let mut cx = Context {
+                                    editor: cx.editor,
+                                    jobs: cx.jobs,
+                                    scroll: None,
+                                };
+                                // validate the current selection, as Enter normally
+                                // would (a no-op when nothing is highlighted)
+                                let _ =
+                                    completion.handle_event(&Event::Key(key!(Enter)), &mut cx);
+                            }
+                            self.clear_completion(cx.editor);
+                            self.insert_mode(&mut cx, key);
+                            self.last_insert.1.push(InsertEvent::Key(key));
+                        }
                         Mode::Insert => {
                             // let completion swallow the event if necessary
                             let mut consumed = false;
