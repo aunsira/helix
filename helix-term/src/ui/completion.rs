@@ -307,9 +307,11 @@ impl Completion {
                     .handlers
                     .trigger_signature_help(SignatureHelpInvoked::Automatic, editor);
             }
-        });
+        })
+        .with_scope("ui.completion");
 
         let popup = Popup::new(Self::ID, menu)
+            .menu_scope("ui.completion")
             .with_scrollbar(false)
             .ignore_escape_key(true);
 

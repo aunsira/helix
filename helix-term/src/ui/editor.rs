@@ -591,10 +591,30 @@ impl EditorView {
         }
         .unwrap_or(base_primary_cursor_scope);
 
+        // Optional alternate scope used for the primary cursor when the primary
+        // range is a non-empty selection. This lets a theme keep the cursor
+        // visible when its usual colour matches the selection highlight. Falls
+        // back to the regular primary cursor scope when the scope is absent.
+        let primary_cursor_selection_scope = match mode {
+            Mode::Insert => theme.find_highlight_exact("ui.cursor.primary.insert.selection"),
+            Mode::Select => theme.find_highlight_exact("ui.cursor.primary.select.selection"),
+            Mode::Normal => theme.find_highlight_exact("ui.cursor.primary.normal.selection"),
+        }
+        .unwrap_or(primary_cursor_scope);
+
         let mut spans = Vec::new();
         for (i, range) in selection.iter().enumerate() {
             let selection_is_primary = i == primary_idx;
             let (cursor_scope, selection_scope) = if selection_is_primary {
+                // A bare caret spans a single grapheme (in insert mode it still
+                // carries the normal-mode width-1 range), so only treat the
+                // range as a real, visible selection when it spans more.
+                let has_selection = next_grapheme_boundary(text, range.from()) < range.to();
+                let primary_cursor_scope = if has_selection {
+                    primary_cursor_selection_scope
+                } else {
+                    primary_cursor_scope
+                };
                 (primary_cursor_scope, primary_selection_scope)
             } else {
                 (cursor_scope, selection_scope)

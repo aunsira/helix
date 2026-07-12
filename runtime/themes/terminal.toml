@@ -1,0 +1,156 @@
+# terminal — a terminal-derived theme.
+#
+# Like `base16_terminal`, this theme paints with the 16 ANSI palette slots
+# instead of fixed hex values, so every colour is supplied by the terminal
+# emulator you launch Helix in (e.g. your Alacritty `[colors.normal]` /
+# `[colors.bright]`). Change your terminal colours and Helix follows along,
+# the same way Kakoune's `default.kak` derives its colours from the terminal.
+#
+# The scope-to-colour choices below mirror the customised `alacritty` theme
+# (string = magenta, keyword = blue, comment = cyan, type = yellow, …), just
+# resolved to ANSI slots rather than the Tomorrow-Night-Bright hex palette.
+#
+# Palette-name reference (helix name -> ANSI slot):
+#   black/red/green/yellow/blue/magenta/cyan = 0-6
+#   light-gray = 7 (normal white)   gray = 8 (bright black / dim grey)
+#   light-red..light-cyan = 9-14    white = 15 (bright white)
+#   default = terminal's own default fg/bg (Color::Reset)
+
+# Syntax highlighting
+"comment" = { fg = "cyan", modifiers = ["italic"] }
+
+"string" = "magenta"
+"string.regexp" = "cyan"
+"string.special" = "cyan"
+"string.special.symbol" = "white"
+"string.special.url" = { fg = "blue", modifiers = ["underlined"] }
+
+"constant" = "white"
+"constant.builtin" = "red"
+"constant.character" = "red"
+"constant.character.escape" = "cyan"
+"constant.numeric" = "red"
+
+"variable" = "default"
+"variable.parameter" = "default"
+"variable.builtin" = "red"
+"variable.other.member" = "default"
+
+"label" = "cyan"
+
+"punctuation" = "default"
+"punctuation.delimiter" = "default"
+"punctuation.bracket" = "default"
+"punctuation.special" = "cyan"
+
+"keyword" = "blue"
+"keyword.control" = "magenta"
+"keyword.control.import" = "magenta"
+"keyword.control.return" = "blue"
+"keyword.control.conditional" = "blue"
+"keyword.directive" = "cyan"
+"keyword.operator" = "blue"
+"keyword.storage" = "magenta"
+"keyword.function" = "blue"
+
+"operator" = "default"
+
+"function" = "default"
+"function.builtin" = "white"
+"function.method" = "white"
+"function.macro" = "cyan"
+"function.special" = "cyan"
+
+"tag" = "yellow"
+"tag.builtin" = "yellow"
+
+"type" = "yellow"
+"type.builtin" = "yellow"
+"type.enum.variant" = "red"
+
+"constructor" = "yellow"
+
+"namespace" = "default"
+
+"special" = "cyan"
+
+# Markup
+"markup.heading" = { fg = "blue", modifiers = ["bold"] }
+"markup.heading.marker" = "gray"
+"markup.list" = "red"
+"markup.bold" = { modifiers = ["bold"] }
+"markup.italic" = { modifiers = ["italic"] }
+"markup.strikethrough" = { modifiers = ["crossed_out"] }
+"markup.link.url" = { fg = "blue", modifiers = ["underlined"] }
+"markup.link.text" = "red"
+"markup.link.label" = "cyan"
+"markup.quote" = "green"
+"markup.raw" = "green"
+"markup.raw.block" = "default"
+
+"diff.plus" = "green"
+"diff.minus" = "red"
+"diff.delta" = "yellow"
+
+# Interface — the editor keeps the terminal's default background. Only the
+# cursorline lifts off it, via the 256-colour grayscale ramp (index 235); menus
+# and popups stay on the terminal default background.
+"ui.text" = "default"
+"ui.text.focus" = { fg = "white", bg = "blue", modifiers = ["bold"] }
+"ui.text.inactive" = { fg = "gray" }
+"ui.text.info" = "default"
+
+"ui.cursor" = { fg = "black", bg = "white" }
+"ui.cursor.primary" = { fg = "black", bg = "white" }
+"ui.cursor.primary.insert" = { fg = "black", bg = "cyan" }
+"ui.cursor.primary.insert.selection" = { fg = "black", bg = "white" }  # stay visible on the blue selection
+"ui.cursor.primary.select" = { fg = "black", bg = "white" }
+"ui.cursor.match" = { fg = "yellow", modifiers = ["underlined"] }
+
+"ui.selection" = { fg = "white", bg = "blue" }
+"ui.selection.primary" = { fg = "white", bg = "blue" }
+
+"ui.linenr" = { fg = "gray" }
+"ui.linenr.selected" = { fg = "white", modifiers = ["bold"] }
+
+"ui.cursorline.primary" = { bg = "235" }  # 256-colour ramp: subtle dark grey
+
+"ui.statusline" = { fg = "default", bg = "default" }
+"ui.statusline.inactive" = { fg = "gray" }
+"ui.statusline.normal" = { fg = "black", bg = "blue", modifiers = ["bold"] }
+"ui.statusline.insert" = { fg = "black", bg = "green", modifiers = ["bold"] }
+"ui.statusline.select" = { fg = "black", bg = "magenta", modifiers = ["bold"] }
+
+"ui.bufferline" = { fg = "gray" }
+"ui.bufferline.active" = { fg = "default", modifiers = ["bold"] }
+
+"ui.popup" = { fg = "default" }
+"ui.popup.info" = { fg = "default" }
+"ui.window" = { fg = "gray" }
+"ui.help" = { fg = "default" }
+
+"ui.menu" = { fg = "default" }
+"ui.menu.selected" = { fg = "white", bg = "blue" }
+"ui.menu.scroll" = { fg = "gray" }
+"ui.completion" = { fg = "blue", bg = "white" }
+"ui.completion.scroll" = { fg = "blue" }
+
+"ui.virtual.whitespace" = { fg = "gray" }
+"ui.virtual.ruler" = { bg = "gray" }
+"ui.virtual.indent-guide" = { fg = "gray" }
+"ui.virtual.inlay-hint" = { fg = "gray" }
+"ui.virtual.jump-label" = { fg = "#cc6666", modifiers = ["italic", "bold"] }  # exact alacritty.toml red
+
+"ui.highlight" = { fg = "white", bg = "blue" }
+
+"warning" = "yellow"
+"error" = "red"
+"info" = "blue"
+"hint" = "cyan"
+
+"diagnostic.warning" = { underline = { color = "yellow", style = "curl" } }
+"diagnostic.error" = { underline = { color = "red", style = "curl" } }
+"diagnostic.info" = { underline = { color = "blue", style = "curl" } }
+"diagnostic.hint" = { underline = { color = "cyan", style = "curl" } }
+"diagnostic.unnecessary" = { modifiers = ["dim"] }
+"diagnostic.deprecated" = { modifiers = ["crossed_out"] }

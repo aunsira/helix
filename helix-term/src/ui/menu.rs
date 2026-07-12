@@ -6,7 +6,11 @@ use tui::{buffer::Buffer as Surface, widgets::Table};
 
 pub use tui::widgets::{Cell, Row};
 
-use helix_view::{editor::SmartTabConfig, graphics::Rect, Editor};
+use helix_view::{
+    editor::SmartTabConfig,
+    graphics::{Rect, Style},
+    Editor, Theme,
+};
 use tui::layout::Constraint;
 
 pub trait Item: Sync + Send + 'static {
@@ -36,6 +40,12 @@ pub struct Menu<T: Item> {
     viewport: (u16, u16),
     recalculate: bool,
     auto_close: bool,
+
+    /// Base theme scope for the menu's background, e.g. `ui.menu` or
+    /// `ui.completion`. The `.selected` and `.scroll` sub-scopes are derived
+    /// from it, and each falls back to the matching `ui.menu` scope when the
+    /// theme does not define the override.
+    scope: &'static str,
 }
 
 impl<T: Item> Menu<T> {
@@ -61,7 +71,30 @@ impl<T: Item> Menu<T> {
             viewport: (0, 0),
             recalculate: true,
             auto_close: false,
+            scope: "ui.menu",
         }
+    }
+
+    /// Override the theme scope used to style the menu. Defaults to `ui.menu`.
+    pub fn with_scope(mut self, scope: &'static str) -> Self {
+        self.scope = scope;
+        self
+    }
+
+    /// Resolve the `(background, selected, scroll)` styles for this menu,
+    /// falling back to the `ui.menu` scopes when the override is undefined.
+    fn styles(&self, theme: &Theme) -> (Style, Style, Style) {
+        let background = theme
+            .try_get_exact(self.scope)
+            .or_else(|| theme.try_get("ui.menu"))
+            .unwrap_or_else(|| theme.get("ui.text"));
+        let selected = theme
+            .try_get_exact(&format!("{}.selected", self.scope))
+            .unwrap_or_else(|| theme.get("ui.menu.selected"));
+        let scroll = theme
+            .try_get_exact(&format!("{}.scroll", self.scope))
+            .unwrap_or_else(|| theme.get("ui.menu.scroll"));
+        (background, selected, scroll)
     }
 
     pub fn reset_cursor(&mut self) {
@@ -342,10 +375,7 @@ impl<T: Item + 'static> Component for Menu<T> {
 
     fn render(&mut self, area: Rect, surface: &mut Surface, cx: &mut Context) {
         let theme = &cx.editor.theme;
-        let style = theme
-            .try_get("ui.menu")
-            .unwrap_or_else(|| theme.get("ui.text"));
-        let selected = theme.get("ui.menu.selected");
+        let (style, selected, scroll_style) = self.styles(theme);
 
         surface.clear_with(area, style);
 
@@ -402,7 +432,6 @@ impl<T: Item + 'static> Component for Menu<T> {
 
         let fits = len <= win_height;
 
-        let scroll_style = theme.get("ui.menu.scroll");
         if !fits {
             let scroll_height = win_height.pow(2).div_ceil(len).min(win_height);
             let scroll_line = (win_height - scroll_height) * scroll

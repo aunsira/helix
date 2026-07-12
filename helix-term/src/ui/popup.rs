@@ -39,6 +39,10 @@ pub struct Popup<T: Component> {
     ignore_escape_key: bool,
     id: &'static str,
     has_scrollbar: bool,
+    /// Overrides the theme scope used for the popup background when its
+    /// contents are a menu. Falls back to `ui.menu` when the theme does not
+    /// define the override. Used e.g. by the completion menu (`ui.completion`).
+    menu_scope: Option<&'static str>,
 }
 
 impl<T: Component> Popup<T> {
@@ -53,7 +57,15 @@ impl<T: Component> Popup<T> {
             ignore_escape_key: false,
             id,
             has_scrollbar: true,
+            menu_scope: None,
         }
+    }
+
+    /// Override the theme scope used for the background when the popup wraps a
+    /// menu. Defaults to `ui.menu`.
+    pub fn menu_scope(mut self, scope: &'static str) -> Self {
+        self.menu_scope = Some(scope);
+        self
     }
 
     /// Set the anchor position next to which the popup should be drawn.
@@ -326,9 +338,11 @@ impl<T: Component> Component for Popup<T> {
         // clear area
         let background = if is_menu {
             // TODO: consistently style menu
+            let scope = self.menu_scope.unwrap_or("ui.menu");
             cx.editor
                 .theme
-                .try_get("ui.menu")
+                .try_get_exact(scope)
+                .or_else(|| cx.editor.theme.try_get("ui.menu"))
                 .unwrap_or_else(|| cx.editor.theme.get("ui.text"))
         } else {
             cx.editor.theme.get("ui.popup")
@@ -356,7 +370,14 @@ impl<T: Component> Component for Popup<T> {
             let win_height = inner.height as usize;
             let len = child_height as usize;
             let fits = len <= win_height;
-            let scroll_style = cx.editor.theme.get("ui.menu.scroll");
+            let scroll_style = self
+                .menu_scope
+                .and_then(|scope| {
+                    cx.editor
+                        .theme
+                        .try_get_exact(&format!("{scope}.scroll"))
+                })
+                .unwrap_or_else(|| cx.editor.theme.get("ui.menu.scroll"));
 
             if !fits {
                 let scroll_height = win_height.pow(2).div_ceil(len).min(win_height);

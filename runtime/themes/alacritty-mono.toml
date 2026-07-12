@@ -93,9 +93,10 @@
 "ui.cursor.primary" = { fg = "background", bg = "white" }
 "ui.cursor.match" = { fg = "bright_white", modifiers = ["underlined"] }
 "ui.cursor.primary.insert" = { fg = "background", bg = "light-blue" }
+"ui.cursor.primary.insert.selection" = { fg = "black", bg = "white" }  # stay visible on the light-blue selection
 # Selection — kept as in alacritty
 "ui.cursor.select" = { fg = "bright_white", bg = "light-blue" }
-"ui.cursor.primary.select" = { fg = "bright_white", bg = "white" }
+"ui.cursor.primary.select" = { fg = "black", bg = "white" }
 
 "ui.selection" = { fg = "bright_white", bg = "light-blue" }
 "ui.selection.primary" = { fg = "bright_white", bg = "light-blue" }

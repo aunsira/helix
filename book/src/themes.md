@@ -356,6 +356,9 @@ These scopes are used for theming the editor interface:
 | `ui.menu`                         | Code and command completion menus                                                              |
 | `ui.menu.selected`                | Selected autocomplete item                                                                     |
 | `ui.menu.scroll`                  | `fg` sets thumb color, `bg` sets track color of scrollbar                                      |
+| `ui.completion`                   | Code (LSP) completion menu; falls back to `ui.menu` when unset                                 |
+| `ui.completion.selected`          | Selected code completion item; falls back to `ui.menu.selected` when unset                     |
+| `ui.completion.scroll`            | Code completion scrollbar; falls back to `ui.menu.scroll` when unset                           |
 | `ui.selection`                    | For selections in the editing area                                                             |
 | `ui.selection.primary`            |                                                                                                |
 | `ui.highlight`                    | Highlighted lines in the picker preview                                                        |
